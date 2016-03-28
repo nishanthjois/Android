@@ -1,5 +1,6 @@
 package com.example.nj.eggtimer;
 
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
@@ -8,12 +9,16 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
     SeekBar timerSeekBar;
     TextView timerTextView;
+    Button controlButton;
+    Boolean status = false;
+    CountDownTimer countDownTimer;
 
     public void updateTimer(int secondsLeft){
 
@@ -21,8 +26,9 @@ public class MainActivity extends AppCompatActivity {
         int seconds = secondsLeft - minutes*60;
 
         String secondString = Integer.toString(seconds);
-        if (secondString == "0"){
-            secondString="00";
+        if(seconds<=9)
+        {
+            secondString ="0" + secondString;
         }
         timerTextView.setText(Integer.toString(minutes) + ":"  + secondString);
 
@@ -30,24 +36,49 @@ public class MainActivity extends AppCompatActivity {
 
     public void controlTimer (View view){
 
-        new CountDownTimer(timerSeekBar.getProgress()* 1000 ,1000){
+        if (status == false) {
+            timerSeekBar.setEnabled(false);
+            status=true;
+            controlButton.setText("Stop!");
 
-            @Override
-            public void onTick(long millisUntilFinished) {
+            countDownTimer= new CountDownTimer(timerSeekBar.getProgress() * 1000 + 100, 1000) {
 
-                updateTimer((int)millisUntilFinished/1000);
+                @Override
+                public void onTick(long millisUntilFinished) {
 
-            }
+                    updateTimer((int) millisUntilFinished / 1000);
 
-            @Override
-            public void onFinish() {
-                timerTextView.setText("0:00");
-                Log.i("Egg timer", "counting done");
+                }
 
-            }
-        }.start();
+                @Override
+                public void onFinish() {
+                    timerTextView.setText("0:00");
+                    MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(),R.raw.airhorn);
+                    mediaPlayer.start();
+                    Log.i("Egg timer", "counting done");
+                    resetTimer();
 
-        Log.i("Egg timer", "Go clicked");
+                }
+            }.start();
+
+            Log.i("Egg timer", "Go clicked");
+
+        }
+
+        else if (status==true){
+           resetTimer();
+
+        }
+    }
+
+    private void resetTimer() {
+
+        timerTextView.setText("0:30");
+        timerSeekBar.setProgress(30);
+        timerSeekBar.setEnabled(true);
+        status=false;
+        controlButton.setText("Go!");
+        countDownTimer.cancel();
     }
 
     @Override
@@ -59,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
 
         timerSeekBar = (SeekBar) findViewById(R.id.timerSeekBar);
         timerTextView = (TextView) findViewById(R.id.timerTextView);
+        controlButton = (Button) findViewById(R.id.controllerButton);
 
         timerSeekBar.setMax(600);
         timerSeekBar.setProgress(30);
